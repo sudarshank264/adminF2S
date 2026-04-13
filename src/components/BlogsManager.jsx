@@ -48,6 +48,17 @@ const BlogsManager = () => {
     const method = editingId ? 'PUT' : 'POST';
     const url = editingId ? `${API_URL}/api/blogs/${editingId}` : `${API_URL}/api/blogs`;
 
+    // Map formData to Backend Schema
+    const payload = {
+      title: formData.title,
+      slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Math.floor(Math.random() * 1000),
+      tag: formData.category,
+      excerpt: formData.summary,
+      bannerImg: formData.imageUrl,
+      thumb: formData.imageUrl || '📰',
+      content: [{ type: 'p', text: formData.content }]
+    };
+
     try {
       const res = await fetch(url, {
         method,
@@ -55,7 +66,7 @@ const BlogsManager = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
@@ -74,10 +85,10 @@ const BlogsManager = () => {
   const handleEdit = (blog) => {
     setFormData({
       title: blog.title || '',
-      category: blog.category || '',
-      summary: blog.summary || '',
-      content: blog.content || '',
-      imageUrl: blog.imageUrl || ''
+      category: blog.tag || '',
+      summary: blog.excerpt || '',
+      content: Array.isArray(blog.content) && blog.content.length > 0 ? blog.content[0].text : '',
+      imageUrl: blog.bannerImg || (blog.thumb !== '📰' ? blog.thumb : '')
     });
     setEditingId(blog._id || blog.id);
     setIsFormVisible(true);
@@ -164,7 +175,7 @@ const BlogsManager = () => {
                 {blogs.map(blog => (
                   <tr key={blog._id || blog.id}>
                     <td style={{ fontWeight: 600 }}>{blog.title}</td>
-                    <td><span className="ad-tag">{blog.category}</span></td>
+                    <td><span className="ad-tag">{blog.tag || 'General'}</span></td>
                     <td>{new Date(blog.createdAt || blog.date || Date.now()).toLocaleDateString()}</td>
                     <td>
                       <div className="cms-action-btns">
