@@ -317,6 +317,7 @@ a { text-decoration: none; color: inherit; }
   border-radius: var(--radius);
   border: 1px solid var(--grey-light);
   box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  min-width: 0;
 }
 
 .ad-chart-card h3 {

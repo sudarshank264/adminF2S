@@ -2,16 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
 
-const revenueData = [
-  { name: 'Jan', revenue: 4000 },
-  { name: 'Feb', revenue: 3000 },
-  { name: 'Mar', revenue: 5000 },
-  { name: 'Apr', revenue: 4500 },
-  { name: 'May', revenue: 6000 },
-  { name: 'Jun', revenue: 8500 },
+const visitorsData = [
+  { name: 'Jan', visitors: 4000 },
+  { name: 'Feb', visitors: 3000 },
+  { name: 'Mar', visitors: 5000 },
+  { name: 'Apr', visitors: 4500 },
+  { name: 'May', visitors: 6000 },
+  { name: 'Jun', visitors: 8500 },
 ];
 
-const serviceData = [
+const countryData = [
+  { name: 'USA', count: 45 },
+  { name: 'UK', count: 30 },
+  { name: 'Canada', count: 20 },
+  { name: 'Australia', count: 15 },
+];
+
+const categoryData = [
   { name: 'Visa Support', count: 45 },
   { name: 'Admissions', count: 30 },
   { name: 'Consulting', count: 20 },
@@ -25,6 +32,8 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard | leads | blogs | reviews
   const [leadsData, setLeadsData] = useState([]);
+  const [blogsData, setBlogsData] = useState([]);
+  const [reviewsData, setReviewsData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Authentication check & Fetching
@@ -35,37 +44,59 @@ const AdminDashboard = () => {
       return;
     }
 
-    // Fetch Leads if authorized
-    const fetchLeads = async () => {
+    // Fetch Data if authorized
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/contact`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const headers = { Authorization: `Bearer ${token}` };
         
-        if (response.status === 401) {
-          // Token expired or invalid
+        // Fetch leads
+        const leadsRes = await fetch(`${API_URL}/api/contact`, { headers });
+        if (leadsRes.status === 401) {
           localStorage.removeItem('adminToken');
           navigate('/', { replace: true });
           return;
         }
+        
+        if (leadsRes.ok) {
+          const leads = await leadsRes.json();
+          setLeadsData(leads);
+        }
 
-        const data = await response.json();
-        setLeadsData(data);
+        // Fetch blogs
+        try {
+          const blogsRes = await fetch(`${API_URL}/api/blogs`, { headers });
+          if (blogsRes.ok) {
+            const blogs = await blogsRes.json();
+            setBlogsData(Array.isArray(blogs) ? blogs : []);
+          }
+        } catch (err) {
+          console.error('Error fetching blogs:', err);
+        }
+
+        // Fetch reviews
+        try {
+          const reviewsRes = await fetch(`${API_URL}/api/reviews`, { headers });
+          if (reviewsRes.ok) {
+            const reviews = await reviewsRes.json();
+            setReviewsData(Array.isArray(reviews) ? reviews : []);
+          }
+        } catch (err) {
+          console.error('Error fetching reviews:', err);
+        }
+
       } catch (err) {
-        console.error('Error fetching leads:', err);
+        console.error('Error fetching dashboard data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLeads();
+    fetchData();
   }, [navigate]);
 
   const handleDeleteLead = async (id) => {
     if (!window.confirm("Are you sure you want to permanently delete this client lead?")) return;
-    
+
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_URL}/api/contact/${id}`, {
@@ -80,7 +111,7 @@ const AdminDashboard = () => {
       } else {
         alert("Failed to securely delete data. Check permissions.");
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     }
   };
@@ -92,7 +123,7 @@ const AdminDashboard = () => {
   };
 
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' };
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
@@ -103,10 +134,10 @@ const AdminDashboard = () => {
         <div className="ad-logo">
           ✈️ <span>F2S</span> Admin
         </div>
-        
+
         <nav className="ad-nav">
           <button className={`ad-nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-            📊 Dashboard 
+            📊 Dashboard
           </button>
           <button className={`ad-nav-btn ${activeTab === 'leads' ? 'active' : ''}`} onClick={() => setActiveTab('leads')}>
             📥 Client Leads <span className="ad-badge">{leadsData.length}</span>
@@ -144,56 +175,56 @@ const AdminDashboard = () => {
                 <div className="ad-dashboard-view">
                   <div className="ad-dashboard-grid">
                     <div className="ad-stat-card">
-                      <h4>Total Revenue</h4>
-                      <div className="stat-value">$124,500</div>
-                      <div className="stat-change positive">+14.5% vs last month</div>
+                      <h4>TOTAL BLOGS</h4>
+                      <div className="stat-value">{blogsData.length}</div>
+                      <div className="stat-change positive">Available articles</div>
                     </div>
                     <div className="ad-stat-card">
-                      <h4>Active Users</h4>
+                      <h4>ACTIVE USERS</h4>
                       <div className="stat-value">2,845</div>
                       <div className="stat-change positive">+5.2% vs last month</div>
                     </div>
                     <div className="ad-stat-card">
-                      <h4>Total Leads</h4>
-                      <div className="stat-value">{leadsData.length > 0 ? leadsData.length : 156}</div>
-                      <div className="stat-change positive">+22.4% vs last month</div>
+                      <h4>TOTAL LEADS</h4>
+                      <div className="stat-value">{leadsData.length}</div>
+                      <div className="stat-change positive">Client submissions</div>
                     </div>
                     <div className="ad-stat-card">
-                      <h4>Conversion Rate</h4>
-                      <div className="stat-value">12.8%</div>
-                      <div className="stat-change negative">-1.2% vs last month</div>
+                      <h4>TOTAL REVIEWS</h4>
+                      <div className="stat-value">{reviewsData.length}</div>
+                      <div className="stat-change positive">Client testimonials</div>
                     </div>
                   </div>
 
                   <div className="ad-charts-grid">
                     <div className="ad-chart-card">
-                      <h3>Revenue Growth</h3>
+                      <h3>Web Visitors Overview</h3>
                       <div style={{ width: '100%', height: 300 }}>
                         <ResponsiveContainer>
-                          <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                          <AreaChart data={visitorsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                             <defs>
-                              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#d90429" stopOpacity={0.8}/>
-                                <stop offset="95%" stopColor="#d90429" stopOpacity={0}/>
+                              <linearGradient id="colorVisitors" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#d90429" stopOpacity={0.8} />
+                                <stop offset="95%" stopColor="#d90429" stopOpacity={0} />
                               </linearGradient>
                             </defs>
                             <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                             <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} />
-                            <Area type="monotone" dataKey="revenue" stroke="#d90429" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                            <Area type="monotone" dataKey="visitors" stroke="#d90429" strokeWidth={3} fillOpacity={1} fill="url(#colorVisitors)" />
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>
                     </div>
 
                     <div className="ad-chart-card">
-                      <h3>Service Requests</h3>
+                      <h3>Registrations by Country</h3>
                       <div style={{ width: '100%', height: 300 }}>
                         <ResponsiveContainer>
                           <PieChart>
                             <Pie
-                              data={serviceData}
+                              data={countryData}
                               cx="50%"
                               cy="50%"
                               innerRadius={60}
@@ -201,22 +232,22 @@ const AdminDashboard = () => {
                               paddingAngle={5}
                               dataKey="count"
                             >
-                              {serviceData.map((entry, index) => (
+                              {countryData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                               ))}
                             </Pie>
                             <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} />
-                            <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }}/>
+                            <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
                     </div>
-                    
+
                     <div className="ad-chart-card ad-chart-card-full">
                       <h3>Leads by Category</h3>
                       <div style={{ width: '100%', height: 300 }}>
                         <ResponsiveContainer>
-                          <BarChart data={serviceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                          <BarChart data={categoryData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                             <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
@@ -254,7 +285,7 @@ const AdminDashboard = () => {
                           <td><span className="ad-tag">{lead.serviceNeeded}</span></td>
                           <td style={{ color: 'var(--black)' }}>{lead.destinationCountry || '-'}</td>
                           <td>
-                            <button 
+                            <button
                               onClick={() => handleDeleteLead(lead._id)}
                               style={{ background: 'transparent', border: 'none', color: 'var(--red)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s' }}
                               onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
@@ -273,7 +304,7 @@ const AdminDashboard = () => {
                       ))}
                       {leadsData.length === 0 && (
                         <tr>
-                          <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--grey)'}}>
+                          <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--grey)' }}>
                             No leads submitted yet.
                           </td>
                         </tr>
