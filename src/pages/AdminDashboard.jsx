@@ -21,6 +21,7 @@ const serviceData = [
 const COLORS = ['#d90429', '#111111', '#64748b', '#cbd5e1'];
 
 const AdminDashboard = () => {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard | leads | blogs | reviews
   const [leadsData, setLeadsData] = useState([]);
@@ -37,7 +38,7 @@ const AdminDashboard = () => {
     // Fetch Leads if authorized
     const fetchLeads = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/contact', {
+        const response = await fetch(`${API_URL}/api/contact`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -67,7 +68,7 @@ const AdminDashboard = () => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5001/api/contact/${id}`, {
+      const response = await fetch(`${API_URL}/api/contact/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
