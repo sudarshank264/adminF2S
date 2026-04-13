@@ -1,9 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
+
+const revenueData = [
+  { name: 'Jan', revenue: 4000 },
+  { name: 'Feb', revenue: 3000 },
+  { name: 'Mar', revenue: 5000 },
+  { name: 'Apr', revenue: 4500 },
+  { name: 'May', revenue: 6000 },
+  { name: 'Jun', revenue: 8500 },
+];
+
+const serviceData = [
+  { name: 'Visa Support', count: 45 },
+  { name: 'Admissions', count: 30 },
+  { name: 'Consulting', count: 20 },
+  { name: 'General', count: 15 },
+];
+
+const COLORS = ['#d90429', '#111111', '#64748b', '#cbd5e1'];
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('leads'); // leads | blogs | reviews
+  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard | leads | blogs | reviews
   const [leadsData, setLeadsData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -85,6 +104,9 @@ const AdminDashboard = () => {
         </div>
         
         <nav className="ad-nav">
+          <button className={`ad-nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+            📊 Dashboard 
+          </button>
           <button className={`ad-nav-btn ${activeTab === 'leads' ? 'active' : ''}`} onClick={() => setActiveTab('leads')}>
             📥 Client Leads <span className="ad-badge">{leadsData.length}</span>
           </button>
@@ -108,7 +130,7 @@ const AdminDashboard = () => {
       {/* Main Content Pane */}
       <main className="ad-main">
         <header className="ad-header">
-          <h1>{activeTab === 'leads' ? 'Client Leads Overview' : activeTab === 'blogs' ? 'Blog Management' : 'Client Reviews Content'}</h1>
+          <h1>{activeTab === 'dashboard' ? 'Admin Dashboard' : activeTab === 'leads' ? 'Client Leads Overview' : activeTab === 'blogs' ? 'Blog Management' : 'Client Reviews Content'}</h1>
           <p className="ad-subtitle">Welcome back. Here is your latest data payload.</p>
         </header>
 
@@ -117,6 +139,96 @@ const AdminDashboard = () => {
             <div className="ad-loader">Securely fetching database...</div>
           ) : (
             <>
+              {activeTab === 'dashboard' && (
+                <div className="ad-dashboard-view">
+                  <div className="ad-dashboard-grid">
+                    <div className="ad-stat-card">
+                      <h4>Total Revenue</h4>
+                      <div className="stat-value">$124,500</div>
+                      <div className="stat-change positive">+14.5% vs last month</div>
+                    </div>
+                    <div className="ad-stat-card">
+                      <h4>Active Users</h4>
+                      <div className="stat-value">2,845</div>
+                      <div className="stat-change positive">+5.2% vs last month</div>
+                    </div>
+                    <div className="ad-stat-card">
+                      <h4>Total Leads</h4>
+                      <div className="stat-value">{leadsData.length > 0 ? leadsData.length : 156}</div>
+                      <div className="stat-change positive">+22.4% vs last month</div>
+                    </div>
+                    <div className="ad-stat-card">
+                      <h4>Conversion Rate</h4>
+                      <div className="stat-value">12.8%</div>
+                      <div className="stat-change negative">-1.2% vs last month</div>
+                    </div>
+                  </div>
+
+                  <div className="ad-charts-grid">
+                    <div className="ad-chart-card">
+                      <h3>Revenue Growth</h3>
+                      <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
+                          <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#d90429" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#d90429" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                            <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} />
+                            <Area type="monotone" dataKey="revenue" stroke="#d90429" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    <div className="ad-chart-card">
+                      <h3>Service Requests</h3>
+                      <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
+                          <PieChart>
+                            <Pie
+                              data={serviceData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="count"
+                            >
+                              {serviceData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} />
+                            <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }}/>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                    
+                    <div className="ad-chart-card ad-chart-card-full">
+                      <h3>Leads by Category</h3>
+                      <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
+                          <BarChart data={serviceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                            <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                            <RechartsTooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} />
+                            <Bar dataKey="count" fill="#111111" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'leads' && (
                 <div className="ad-table-wrapper">
                   <table className="ad-table">
