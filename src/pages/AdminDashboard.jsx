@@ -8,36 +8,14 @@ import LeadsManager from '../components/LeadsManager';
 import ServicesManager from '../components/ServicesManager';
 import ContentManager from '../components/ContentManager';
 
-const visitorsData = [
-  { name: 'Jan', visitors: 4000 },
-  { name: 'Feb', visitors: 3000 },
-  { name: 'Mar', visitors: 5000 },
-  { name: 'Apr', visitors: 4500 },
-  { name: 'May', visitors: 6000 },
-  { name: 'Jun', visitors: 8500 },
-];
-
-const countryData = [
-  { name: 'USA', count: 45 },
-  { name: 'UK', count: 30 },
-  { name: 'Canada', count: 20 },
-  { name: 'Australia', count: 15 },
-];
-
-const categoryData = [
-  { name: 'Visa Support', count: 45 },
-  { name: 'Admissions', count: 30 },
-  { name: 'Consulting', count: 20 },
-  { name: 'General', count: 15 },
-];
-
-const COLORS = ['#d90429', '#111111', '#64748b', '#cbd5e1'];
+const COLORS = ['#d90429', '#111111', '#64748b', '#cbd5e1', '#f59e0b', '#3b82f6'];
 
 const AdminDashboard = () => {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
   const navigate = useNavigate();
   // Valid tabs: 'dashboard', 'leads', 'blogs', 'reviews', 'services', 'content'
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // High-level dashboard stats
   const [stats, setStats] = useState({
@@ -47,6 +25,7 @@ const AdminDashboard = () => {
     servicesCount: 0
   });
 
+  const [leadsData, setLeadsData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Authentication check & Fetching overview stats only
@@ -73,7 +52,9 @@ const AdminDashboard = () => {
 
         if (leadsRes.ok) {
           const data = await leadsRes.json();
-          leadsCount = Array.isArray(data) ? data.length : 0;
+          const validData = Array.isArray(data) ? data : [];
+          setLeadsData(validData);
+          leadsCount = validData.length;
         }
 
         try {
@@ -117,31 +98,96 @@ const AdminDashboard = () => {
     navigate('/', { replace: true });
   };
 
+  const closeSidebarMobile = () => {
+    if (window.innerWidth <= 768) setIsSidebarOpen(false);
+  };
+
+  // ─── AGGREGATE CHART DATA ──────────────────────────────────────────────
+
+  // 1. Leads Over Time (Group by Month)
+  const aggregatedVisitors = leadsData.reduce((acc, lead) => {
+    const d = lead.createdAt ? new Date(lead.createdAt) : new Date();
+    const month = d.toLocaleString('default', { month: 'short' });
+    acc[month] = (acc[month] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Default months if empty
+  const defaultMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  let visitorsData = Object.keys(aggregatedVisitors).map(key => ({
+    name: key,
+    visitors: aggregatedVisitors[key]
+  }));
+
+  if (visitorsData.length === 0) {
+    visitorsData = defaultMonths.map(m => ({ name: m, visitors: 0 }));
+  } else {
+    // Sort chronologically (simple heuristic since we only have months)
+    const monthOrder = { 'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12 };
+    visitorsData.sort((a, b) => (monthOrder[a.name] || 0) - (monthOrder[b.name] || 0));
+  }
+
+  // 2. Registrations by Country
+  const aggregatedCountry = leadsData.reduce((acc, lead) => {
+    const country = lead.destinationCountry || 'Unspecified';
+    acc[country] = (acc[country] || 0) + 1;
+    return acc;
+  }, {});
+
+  let countryData = Object.keys(aggregatedCountry).map(key => ({
+    name: key,
+    count: aggregatedCountry[key]
+  })).sort((a, b) => b.count - a.count).slice(0, 5);
+
+  if (countryData.length === 0) {
+    countryData = [{ name: 'No Data', count: 1 }];
+  }
+
+  // 3. Leads by Category
+  const aggregatedCategory = leadsData.reduce((acc, lead) => {
+    const category = lead.serviceNeeded || 'General';
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {});
+
+  let categoryData = Object.keys(aggregatedCategory).map(key => ({
+    name: key,
+    count: aggregatedCategory[key]
+  })).sort((a, b) => b.count - a.count);
+
+  if (categoryData.length === 0) {
+    categoryData = [{ name: 'No Data', count: 0 }];
+  }
+
   return (
     <div className="admin-dashboard">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && <div className="ad-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
+
       {/* Sidebar Navigation */}
-      <aside className="ad-sidebar">
+      <aside className={`ad-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="ad-logo">
           ✈️ <span>F2S</span> Admin
+          <button className="ad-close-btn" onClick={() => setIsSidebarOpen(false)}>✕</button>
         </div>
 
         <nav className="ad-nav">
-          <button className={`ad-nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+          <button className={`ad-nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveTab('dashboard'); closeSidebarMobile(); }}>
             📊 Dashboard
           </button>
-          <button className={`ad-nav-btn ${activeTab === 'leads' ? 'active' : ''}`} onClick={() => setActiveTab('leads')}>
+          <button className={`ad-nav-btn ${activeTab === 'leads' ? 'active' : ''}`} onClick={() => { setActiveTab('leads'); closeSidebarMobile(); }}>
             📥 Client Leads <span className="ad-badge">{stats.leadsCount}</span>
           </button>
-          <button className={`ad-nav-btn ${activeTab === 'blogs' ? 'active' : ''}`} onClick={() => setActiveTab('blogs')}>
+          <button className={`ad-nav-btn ${activeTab === 'blogs' ? 'active' : ''}`} onClick={() => { setActiveTab('blogs'); closeSidebarMobile(); }}>
             📰 Manage Blogs
           </button>
-          <button className={`ad-nav-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
+          <button className={`ad-nav-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => { setActiveTab('reviews'); closeSidebarMobile(); }}>
             ⭐ Manage Reviews
           </button>
-          <button className={`ad-nav-btn ${activeTab === 'services' ? 'active' : ''}`} onClick={() => setActiveTab('services')}>
+          <button className={`ad-nav-btn ${activeTab === 'services' ? 'active' : ''}`} onClick={() => { setActiveTab('services'); closeSidebarMobile(); }}>
             🛠 Manage Services
           </button>
-          <button className={`ad-nav-btn ${activeTab === 'content' ? 'active' : ''}`} onClick={() => setActiveTab('content')}>
+          <button className={`ad-nav-btn ${activeTab === 'content' ? 'active' : ''}`} onClick={() => { setActiveTab('content'); closeSidebarMobile(); }}>
             ⚙️ Website Content
           </button>
         </nav>
@@ -151,21 +197,35 @@ const AdminDashboard = () => {
             <div className="ad-avatar">A</div>
             <span>{localStorage.getItem('adminName') || 'Administrator'}</span>
           </div>
-          <button className="ad-logout" onClick={handleLogout}>Log Out</button>
+          <button className="ad-logout-premium" onClick={handleLogout}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            Logout
+          </button>
         </div>
       </aside>
 
       {/* Main Content Pane */}
       <main className="ad-main">
         <header className="ad-header">
-          <h1>
-            {activeTab === 'dashboard' ? 'Admin Dashboard' :
-              activeTab === 'leads' ? 'Client Leads Overview' :
-                activeTab === 'blogs' ? 'Blog Management' :
-                  activeTab === 'reviews' ? 'Review Testimonials' :
-                    activeTab === 'services' ? 'Services Offered' :
-                      'Website Content Edit'}
-          </h1>
+          <div className="ad-header-title">
+            <button className="ad-menu-toggle" onClick={() => setIsSidebarOpen(true)}>
+              <svg fill="currentColor" viewBox="0 0 24 24" width="28" height="28">
+                <path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path>
+              </svg>
+            </button>
+            <h1>
+              {activeTab === 'dashboard' ? 'Admin Dashboard' :
+                activeTab === 'leads' ? 'Client Leads Overview' :
+                  activeTab === 'blogs' ? 'Blog Management' :
+                    activeTab === 'reviews' ? 'Review Testimonials' :
+                      activeTab === 'services' ? 'Services Offered' :
+                        'Website Content Edit'}
+            </h1>
+          </div>
           <p className="ad-subtitle">Welcome back to the unified control center.</p>
         </header>
 
@@ -201,7 +261,7 @@ const AdminDashboard = () => {
 
                   <div className="ad-charts-grid">
                     <div className="ad-chart-card">
-                      <h3>Web Visitors Overview</h3>
+                      <h3>Leads Over Time</h3>
                       <div style={{ width: '100%', height: 300 }}>
                         <ResponsiveContainer>
                           <AreaChart data={visitorsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
