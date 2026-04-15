@@ -7,6 +7,7 @@ import ReviewsManager from '../components/ReviewsManager';
 import LeadsManager from '../components/LeadsManager';
 import ServicesManager from '../components/ServicesManager';
 import ContentManager from '../components/ContentManager';
+import CountriesManager from '../components/CountriesManager';
 
 const COLORS = ['#d90429', '#111111', '#64748b', '#cbd5e1', '#f59e0b', '#3b82f6'];
 
@@ -184,6 +185,9 @@ const AdminDashboard = () => {
           <button className={`ad-nav-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => { setActiveTab('reviews'); closeSidebarMobile(); }}>
             ⭐ Manage Reviews
           </button>
+          <button className={`ad-nav-btn ${activeTab === 'countries' ? 'active' : ''}`} onClick={() => { setActiveTab('countries'); closeSidebarMobile(); }}>
+            🗺️ Manage Countries
+          </button>
           <button className={`ad-nav-btn ${activeTab === 'services' ? 'active' : ''}`} onClick={() => { setActiveTab('services'); closeSidebarMobile(); }}>
             🛠 Manage Services
           </button>
@@ -222,8 +226,9 @@ const AdminDashboard = () => {
                 activeTab === 'leads' ? 'Client Leads Overview' :
                   activeTab === 'blogs' ? 'Blog Management' :
                     activeTab === 'reviews' ? 'Review Testimonials' :
-                      activeTab === 'services' ? 'Services Offered' :
-                        'Website Content Edit'}
+                      activeTab === 'countries' ? 'Country Visa Guides' :
+                        activeTab === 'services' ? 'Services Offered' :
+                          'Website Content Edit'}
             </h1>
           </div>
           <p className="ad-subtitle">Welcome back to the unified control center.</p>
@@ -327,6 +332,7 @@ const AdminDashboard = () => {
               {activeTab === 'leads' && <LeadsManager />}
               {activeTab === 'blogs' && <BlogsManager />}
               {activeTab === 'reviews' && <ReviewsManager />}
+              {activeTab === 'countries' && <CountriesManager />}
               {activeTab === 'services' && <ServicesManager />}
               {activeTab === 'content' && <ContentManager />}
             </>
