@@ -143,13 +143,13 @@ const BlogsManager = () => {
           </div>
 
           <div className="cms-form-group">
-            <label>Summary (Short description)</label>
-            <textarea name="summary" value={formData.summary} onChange={handleInputChange} rows="2" required />
+            <label>Short Content (Appears on blog card)</label>
+            <textarea name="summary" value={formData.summary} onChange={handleInputChange} rows="3" required />
           </div>
 
           <div className="cms-form-group">
-            <label>Main Content</label>
-            <textarea name="content" value={formData.content} onChange={handleInputChange} rows="8" required />
+            <label>Main Content (Appears on individual blog page)</label>
+            <textarea name="content" value={formData.content} onChange={handleInputChange} rows="10" required />
           </div>
 
           <div className="cms-form-actions">

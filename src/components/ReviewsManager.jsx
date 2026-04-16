@@ -13,6 +13,8 @@ const ReviewsManager = () => {
     content: '',
     videoUrl: ''
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     fetchReviews();
@@ -46,17 +48,25 @@ const ReviewsManager = () => {
     const method = editingId ? 'PUT' : 'POST';
     const url = editingId ? `${API_URL}/api/reviews/${editingId}` : `${API_URL}/api/reviews`;
 
+    const submitData = new FormData();
+    submitData.append('clientName', formData.clientName);
+    submitData.append('rating', formData.rating);
+    submitData.append('content', formData.content);
+    if (formData.videoUrl) submitData.append('videoUrl', formData.videoUrl);
+    if (imageFile) submitData.append('image', imageFile);
+
     try {
       const res = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: submitData
       });
       if (res.ok) {
         setFormData({ clientName: '', rating: 5, content: '', videoUrl: '' });
+        setImageFile(null);
+        setImagePreview(null);
         setEditingId(null);
         setIsFormVisible(false);
         fetchReviews();
@@ -74,6 +84,8 @@ const ReviewsManager = () => {
       videoUrl: review.videoUrl || ''
     });
     setEditingId(review._id || review.id);
+    setImagePreview(review.image ? `${API_URL}${review.image}` : (review.img && review.img.startsWith('http') ? review.img : `${API_URL}${review.img}`));
+    setImageFile(null);
     setIsFormVisible(true);
   };
 
@@ -128,9 +140,27 @@ const ReviewsManager = () => {
             <textarea name="content" value={formData.content} onChange={handleInputChange} rows="4" required />
           </div>
 
+          <div className="cms-form-group">
+            <label>Upload Image</label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  setImageFile(file);
+                  setImagePreview(URL.createObjectURL(file));
+                }
+              }} 
+            />
+            {imagePreview && (
+              <img src={imagePreview} alt="Preview" style={{ marginTop: '10px', maxHeight: '80px', borderRadius: '4px', objectFit: 'cover' }} />
+            )}
+          </div>
+
           <div className="cms-form-actions">
             <button type="submit" className="ad-btn primary">Save Review</button>
-            <button type="button" className="ad-btn secondary" onClick={() => { setIsFormVisible(false); setEditingId(null); }}>Cancel</button>
+            <button type="button" className="ad-btn secondary" onClick={() => { setIsFormVisible(false); setEditingId(null); setImageFile(null); setImagePreview(null); }}>Cancel</button>
           </div>
         </form>
       ) : (
@@ -156,7 +186,17 @@ const ReviewsManager = () => {
                     <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {review.content}
                     </td>
-                    <td>{review.videoUrl ? '📹 Video' : '📝 Text'}</td>
+                    <td>
+                      {review.image || review.img ? (
+                        <img 
+                          src={review.image && !review.image.startsWith('http') ? `${API_URL}${review.image}` : (review.img && !review.img.startsWith('http') ? `${API_URL}${review.img}` : (review.image || review.img))} 
+                          alt="Review" 
+                          style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} 
+                        />
+                      ) : (
+                         review.videoUrl ? '📹 Video' : '📝 Text'
+                      )}
+                    </td>
                     <td>
                       <div className="cms-action-btns">
                         <button onClick={() => handleEdit(review)} className="action-btn edit-btn">Edit</button>

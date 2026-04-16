@@ -85,7 +85,7 @@ const LeadsManager = () => {
                   <td><a href={`mailto:${lead.email}`} style={{ color: 'var(--black)' }}>{lead.email}</a></td>
                   <td style={{ color: 'var(--black)' }}>{lead.phone}</td>
                   <td><span className="ad-tag">{lead.serviceNeeded || lead.service}</span></td>
-                  <td style={{ color: 'var(--black)' }}>{lead.destinationCountry || lead.destination || '-'}</td>
+                  <td style={{ color: 'var(--black)' }}>{lead.destination || lead.destinationCountry || '-'}</td>
                   <td>
                     <button
                       onClick={() => handleDeleteLead(lead._id || lead.id)}
