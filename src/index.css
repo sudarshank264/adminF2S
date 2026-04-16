@@ -995,3 +995,56 @@ a {
     font-size: 1.8rem;
   }
 }
+
+/* ───────────────────────────────────────────────────────── */
+/*          COUNTRIES MANAGER SCROLL & RESPONSIVE FIX        */
+/* ───────────────────────────────────────────────────────── */
+.admin-cms-panel {
+  height: 100% !important; /* Override inline 100vh */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden; /* Added to keep scroll within children */
+}
+
+.cms-grid {
+  flex: 1;
+  min-height: 0;
+}
+
+.cms-form-card,
+.cms-list {
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Custom scrollbars for internal panels */
+.cms-form-card::-webkit-scrollbar,
+.cms-list::-webkit-scrollbar {
+  width: 6px;
+}
+.cms-form-card::-webkit-scrollbar-track,
+.cms-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cms-form-card::-webkit-scrollbar-thumb,
+.cms-list::-webkit-scrollbar-thumb {
+  background: var(--grey-light);
+  border-radius: 10px;
+}
+.cms-form-card::-webkit-scrollbar-thumb:hover,
+.cms-list::-webkit-scrollbar-thumb:hover {
+  background: var(--grey);
+}
+
+@media (max-width: 900px) {
+  .cms-grid {
+    height: auto;
+    overflow-y: auto;
+  }
+  .cms-form-card,
+  .cms-list {
+    height: auto;
+    overflow-y: visible;
+  }
+}

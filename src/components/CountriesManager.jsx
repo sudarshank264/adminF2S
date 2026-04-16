@@ -152,10 +152,10 @@ const CountriesManager = () => {
   };
 
   return (
-    <div className="admin-cms-panel" style={{ color: 'var(--black)' }}>
+    <div className="admin-cms-panel" style={{ color: 'var(--black)', height: '100vh' }}>
       <style>{`
-        .cms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
-        .cms-form-card { background: var(--white); padding: 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .cms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px;height: 100%;min-height: 0 }
+        .cms-form-card { background: var(--white); padding: 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);height: 100%;overflow-y: auto }
         .cms-input { width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-family: var(--ff-body); }
         .cms-btn { background: var(--red); color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
         .cms-btn:hover { background: var(--red-dark); }
@@ -167,7 +167,7 @@ const CountriesManager = () => {
         .country-actions .btn-danger { background: #ffebee; color: var(--red); }
         .country-actions .btn-danger:hover { background: #ffcdd2; }
         @media (max-width: 900px) {
-          .cms-grid { grid-template-columns: 1fr; }
+          .cms-grid { grid-template-columns: 1fr}
         }
       `}</style>
 
