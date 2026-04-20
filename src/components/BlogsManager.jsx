@@ -6,7 +6,7 @@ const BlogsManager = () => {
   const [loading, setLoading] = useState(true);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
+
   // Form State
   const [formData, setFormData] = useState({
     title: '',
@@ -29,7 +29,7 @@ const BlogsManager = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        setBlogs(Array.isArray(data) ? data : []);
+        setBlogs(data.blogs || []);
       }
     } catch (err) {
       console.error('Error fetching blogs:', err);
@@ -126,7 +126,7 @@ const BlogsManager = () => {
       {isFormVisible ? (
         <form className="cms-form" onSubmit={handleSubmit}>
           <h4>{editingId ? 'Edit Blog' : 'Create New Blog'}</h4>
-          
+
           <div className="cms-form-group">
             <label>Title</label>
             <input type="text" name="title" value={formData.title} onChange={handleInputChange} required />

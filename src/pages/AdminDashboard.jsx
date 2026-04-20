@@ -62,7 +62,7 @@ const AdminDashboard = () => {
           const blogsRes = await fetch(`${API_URL}/api/blogs`, { headers });
           if (blogsRes.ok) {
             const data = await blogsRes.json();
-            blogsCount = Array.isArray(data) ? data.length : 0;
+            blogsCount = data.blogs ? data.blogs.length : 0;
           }
         } catch (err) { }
 
